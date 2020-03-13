@@ -1,5 +1,4 @@
 #Camryn Hollarsmith
-#TransitionMatrix4x4.py
 #Thesis Advisor: Sarah Cannon
 #Thesis Fall 2019 - Spring 2020
 
@@ -70,7 +69,6 @@ def numedgesbetween(color, listofedges):
     return n 
             
 
-#VERSION 1
 s = (117, 117) 
 #we set it to zero primarily because there are more empty values than filled and then throughout the for loops below i fill in the values for which the statements are true
 A = np.zeros(s, dtype=float )
@@ -85,37 +83,20 @@ for i in range(117):
 
         #if the number of districts in common is 3 then the plans are the same so there is no probability of going from one to the other
         # the zero will be addressed later as the diagonal entry but for now, this is correct.
-        # technically this line does not have to be indicated because if we did not include it the diagonals would still be zero because the base matrix is all 0's
-        if n == 4: # or n == 3: arbitrary to say 
+        if n == 4:
             A[i,j] = 0 
-        #this is what we are most interested in!!!:
         #if the two plans share one or two district in common, then what's the probability of going from one districting plan to the other?
         if n == 2:
             #want to know the list of vertices in plani where they are not in the first district in common between the two plans
             #this is what the step is of going from one plan to another. 
             #know there are two dist in common, then look at the other vertices of districts not in common
             LV1 = [v for v in g.nodes() if plans[i][v] not in commonlist[0]]
-           
-            # print ("Vertices of districts not in common between two plans:") 
-            # print (LV1)
             
-            #want to know which plans we are indicating between and what values we get from each plan
-            
-            # print ("i, j:")
-            # print (i, j)
-            
-            #the commonlist is the vertices that are shared between the two plans
-            
-            # print ("This is the commonlist:")
-            # print(commonlist)
-            
-            #taking the union of all of the vertices from LV1 because this is what the probability is! 
+            #taking the union of all of the vertices from LV1 because this is what the probability is 
             #disrregarding the one district in common, this is taking the spanning tree of the rest of the vertices.
             union = g.subgraph(LV1) 
-            # print ("union") 
-            # print (union)
             #using this to find if endpoiints are not in the same district. if they are NOT in the same district then you add 1 for each vertex
-            #the idea behind this is to count the number of choices of a tree and an edges so that the union happens - in 3x3 case is usually 3
+            #the idea behind this is to count the number of choices of a tree and an edges so that the union happens
 
             #counting the number of edges between the two districts that are not in the commonlist for plans[j] 
             neb = numedgesbetween(plans[j], commonlist[1])
@@ -124,41 +105,22 @@ for i in range(117):
                 if k not in commonlist:
                     if IsItSquare(plans[j], k) == True:
                         wayssameplan *= 4
-            
-            #test if isitsquare is true for both districts in the union: 
-            #if yes, then prob is 4*4*2
-
-            
-
-
+    
             #taking the laplacian of the union
             # the diagonals of the laplacian give you the degrees of the vertices
-            #so if the diagonal entry is 2 then that vertex has degree 2 meaning it is connected to 2 other vertices
             #we take the laplacian of the union because we want to know the degrees of the two other districts not in common (which is the union)
             Lapl = nx.laplacian_matrix(union)
             #turning it into a matrix that is viewable
             LaplArray = np.matrix(Lapl.toarray())
             
-            #print ("This is the Laplacian array:")
-            #print (LaplArray )
-            #print ()
-            
             #taking the minor of the laplacian. 
             #doing this allows us to then take the determinant which gives us the correct number of spanning trees 
             #taking the minor means we delete one row and one column. I decide to delete the last row and column because coding it is simple.
             #it is irrelevant which row/column we delete. 
-            mLapl = LaplArray[:-1,:-1] #deleting last row and last column
-            
-            # print ("This is the mLaplacian array:")
-            # print (mLapl) 
-            # print ()
+            mLapl = LaplArray[:-1,:-1]
             
             #want to round the determinant of the minor of laplacian because we don't need the extra values
-            det = round( npla.det(mLapl)) #determinant of minor of Laplacian
-            
-            # print("This is the determinant (number of spanning trees):")
-            # print (det)
-            # print () 
+            det = round( npla.det(mLapl)) 
             
             #now multiplying all of the elements of our probability to find the probability
             #we have 1/det which is 1/the number of spanning trees
@@ -166,38 +128,22 @@ for i in range(117):
             #we have 1/7 = 0.1428571429 which is the number of edges 
             #finally we have wayssameplan which is the number of choices of a tree and an edges
             prob = ((1/det) * 0.1666666667 * 0.1428571429 * wayssameplan) 
-           
-            # print("This is the probability:")
-            # print (round(prob, 4)) 
-            # print()
             
-            #fill in each value in the matrix with a correct value! 
+            #fill in each value in the matrix with a correct value
             A[i,j] = prob 
             #adding up every value in the row so that we can find the diagonal entry
-            sum = sum + prob #A[i,j]
+            sum = sum + prob
 
     #fill in the diagonals with -sum because want rows to sum to zero.        
     A[i,i] = -sum 
-    #print ("plans[",i, "]")
-    #print (plans[i])
-    #print ("plans[", j, "]")
-    #print (plans[j])
-    #print ("A[", i, "][", j, "]")
-    #print (A[i,j])
    
-
-# print ('VERSION 1 117x177 matrix with zeros where there is probability zero going from one plan to another and the correct value where there is a probability of going from one plan to another:')
 print (A)
-# print ()
-
 
 
 #version 1 4x4, diagonal entries s.t. row sums to 0
 A = np.array(A)
 for i in range(117):
     A[i][116] = 1
-# print ('A matrix from version 1 4x4 s.t. row sums to 0:')
-# print (A) 
 #to find stationary distribution:
 X = np.zeros((1,117))
 X[0,116] = 1 
@@ -208,30 +154,14 @@ print ('solution to version 1, pi:')
 print (PI) 
 
 
-
 #Drawing grid graphs 
-#for i in range(117):
-#   print ("plan", i)
-#    plt.figure() 
-#    nx.draw(g,pos = {x:x for x in g.nodes()}, node_color = [plans[i][x] for x in g.nodes()])
-#    plt.show()
+for i in range(117):
+    print ("plan", i)
+    plt.figure() 
+    nx.draw(g,pos = {x:x for x in g.nodes()}, node_color = [plans[i][x] for x in g.nodes()])
+    plt.show()
     
 
 #plt.figure() # start a figure
 #nx.draw(g,pos = {x:x for x in g.nodes()}, node_color = [plans[1][x] for x in g.nodes()])
 #plt.show()
-
-# plt.figure() # start a figure
-# nx.draw(g,pos = {x:x for x in g.nodes()}, node_color = [plans[76][x] for x in g.nodes()])
-# plt.show()
-
-# plt.figure() # start a figure
-# nx.draw(g,pos = {x:x for x in g.nodes()}, node_color = [plan2[x] for x in g.nodes()])
-# plt.show()
-
-# plt.figure() # start a figure
-# nx.draw(g,pos = {x:x for x in g.nodes()}, node_color = [plan3[x] for x in g.nodes()])
-# plt.show()
-
-
-# np.set_printoptions(precision=10)
